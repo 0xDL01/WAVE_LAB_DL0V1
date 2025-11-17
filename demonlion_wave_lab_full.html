@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🌀 DemonLion Wave Lab – Mic + Camera + Synthetic + WiFi</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #050608;
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-top: 16px;
+      font-size: 1.6rem;
+    }
+
+    #container {
+      max-width: 1100px;
+      width: 100%;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    #topRow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    select, button {
+      background: #151822;
+      color: #f5f5f5;
+      border-radius: 6px;
+      border: 1px solid #2b3040;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    button {
+      padding: 5px 10px;
+    }
+
+    button:hover {
+      background: #1c2030;
+    }
+
+    small {
+      color: #838aa0;
+    }
+
+    #controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .wave-panel {
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #11141a;
+      border: 1px solid #242835;
+    }
+
+    .wave-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      margin: 4px 0;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .row label {
+      flex: 0 0 90px;
+    }
+
+    .row input[type="range"] {
+      flex: 1;
+    }
+
+    .row span.value {
+      width: 58px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #b0b6c7;
+    }
+
+    .row input[type="checkbox"] {
+      transform: scale(1.1);
+      margin-right: 4px;
+    }
+
+    #canvasWrapper {
+      background: #05060a;
+      border-radius: 10px;
+      border: 1px solid #292d3a;
+      padding: 10px;
+    }
+
+    #waveCanvas {
+      display: block;
+      width: 100%;
+      height: 360px;
+      background: #05060a;
+    }
+
+    #legend {
+      display: flex;
+      gap: 12px;
+      font-size: 0.8rem;
+      margin-top: 6px;
+      color: #a0a7bb;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 3px;
+      border-radius: 999px;
+    }
+
+    #hiddenVideo {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌀 DemonLion Wave Lab – Mic + Camera + Synthetic + WiFi</h1>
+  <div id="container">
+    <div id="topRow">
+      <span>Merge:</span>
+      <select id="mergeMode">
+        <option value="sum">Sum (1 + 2 + 3 + 4)</option>
+        <option value="avg">Average</option>
+        <option value="diff12">Diff (1 − 2)</option>
+        <option value="diff13">Diff (1 − 3)</option>
+        <option value="diff14">Diff (1 − 4)</option>
+      </select>
+
+      <button id="resetBtn">Reset settings</button>
+      <small>1=Mic, 2=Camera motion, 3=Synthetic sine, 4=WiFi RSSI.</small>
+    </div>
+
+    <div id="controls">
+      <!-- Wave 1: Mic -->
+      <div class="wave-panel" data-wave="0">
+        <h2>Wave 1 (Mic)</h2>
+        <div class="row">
+          <label>
+            <input type="checkbox" class="enabled" checked>
+            Enabled
+          </label>
+        </div>
+        <div class="row">
+          <label>Gain</label>
+          <input type="range" class="amp" min="0" max="3" step="0.05" value="1.5">
+          <span class="value ampValue">1.50</span>
+        </div>
+      </div>
+
+      <!-- Wave 2: Camera Motion -->
+      <div class="wave-panel" data-wave="1">
+        <h2>Wave 2 (Camera Motion)</h2>
+        <div class="row">
+          <label>
+            <input type="checkbox" class="enabled" checked>
+            Enabled
+          </label>
+        </div>
+        <div class="row">
+          <label>Gain</label>
+          <input type="range" class="amp" min="0" max="3" step="0.05" value="1.5">
+          <span class="value ampValue">1.50</span>
+        </div>
+      </div>
+
+      <!-- Wave 3: Synthetic -->
+      <div class="wave-panel" data-wave="2">
+        <h2>Wave 3 (Synthetic Sine)</h2>
+        <div class="row">
+          <label>
+            <input type="checkbox" class="enabled">
+            Enabled
+          </label>
+        </div>
+        <div class="row">
+          <label>Amplitude</label>
+          <input type="range" class="amp" min="0" max="1.5" step="0.01" value="0.8">
+          <span class="value ampValue">0.80</span>
+        </div>
+        <div class="row">
+          <label>Frequency</label>
+          <input type="range" class="freq" min="0.5" max="8" step="0.1" value="2">
+          <span class="value freqValue">2.0 Hz</span>
+        </div>
+        <div class="row">
+          <label>Phase</label>
+          <input type="range" class="phase" min="0" max="360" step="1" value="0">
+          <span class="value phaseValue">0°</span>
+        </div>
+      </div>
+
+      <!-- Wave 4: WiFi RSSI -->
+      <div class="wave-panel" data-wave="3">
+        <h2>Wave 4 (WiFi RSSI)</h2>
+        <div class="row">
+          <label>
+            <input type="checkbox" class="enabled" checked>
+            Enabled
+          </label>
+        </div>
+        <div class="row">
+          <label>Gain</label>
+          <input type="range" class="amp" min="0" max="3" step="0.05" value="1.5">
+          <span class="value ampValue">1.50</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="canvasWrapper">
+      <canvas id="waveCanvas" width="1040" height="360"></canvas>
+      <div id="legend">
+        <div class="legend-item">
+          <span class="legend-color" style="background:#4fc3f7;"></span> Wave 1 (Mic)
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background:#ffb74d;"></span> Wave 2 (Camera motion)
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background:#ce93d8;"></span> Wave 3 (Synthetic)
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background:#81c784;"></span> Wave 4 (WiFi RSSI)
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background:#66bb6a; height:4px;"></span> Merged wave
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background:#394152; height:1px;"></span> Zero line
+        </div>
+      </div>
+      <div id="wifiInfo" style="margin-top:6px;font-size:0.8rem;color:#a0a7bb;">
+        WiFi: waiting for data…
+      </div>
+    </div>
+  </div>
+
+  <video id="hiddenVideo" autoplay muted playsinline></video>
+
+  <script>
+    const TWO_PI = Math.PI * 2;
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    const mergeModeSelect = document.getElementById('mergeMode');
+    const resetBtn = document.getElementById('resetBtn');
+    const wavePanels = Array.from(document.querySelectorAll('.wave-panel'));
+    const hiddenVideo = document.getElementById('hiddenVideo');
+    const wifiInfo = document.getElementById('wifiInfo');
+
+
+    // Waves: 0=mic, 1=cam, 2=synthetic, 3=wifi
+    const waves = wavePanels.map((panel, idx) => ({
+      enabled: panel.querySelector('.enabled').checked,
+      amp: parseFloat(panel.querySelector('.amp').value),
+      freq: idx === 2 ? parseFloat(panel.querySelector('.freq')?.value || 2) : 0,
+      phaseDeg: idx === 2 ? parseFloat(panel.querySelector('.phase')?.value || 0) : 0
+    }));
+
+    function updateLabels() {
+      wavePanels.forEach((panel, idx) => {
+        const w = waves[idx];
+        panel.querySelector('.ampValue').textContent = w.amp.toFixed(2);
+        if (idx === 2) {
+          panel.querySelector('.freqValue').textContent = w.freq.toFixed(1) + ' Hz';
+          panel.querySelector('.phaseValue').textContent = w.phaseDeg.toFixed(0) + '°';
+        }
+      });
+    }
+
+    wavePanels.forEach((panel, idx) => {
+      const enabledEl = panel.querySelector('.enabled');
+      const ampEl = panel.querySelector('.amp');
+      const freqEl = panel.querySelector('.freq');
+      const phaseEl = panel.querySelector('.phase');
+
+      enabledEl.addEventListener('change', () => {
+        waves[idx].enabled = enabledEl.checked;
+      });
+
+      ampEl.addEventListener('input', () => {
+        waves[idx].amp = parseFloat(ampEl.value);
+        updateLabels();
+      });
+
+      if (freqEl) {
+        freqEl.addEventListener('input', () => {
+          waves[idx].freq = parseFloat(freqEl.value);
+          updateLabels();
+        });
+      }
+
+      if (phaseEl) {
+        phaseEl.addEventListener('input', () => {
+          waves[idx].phaseDeg = parseFloat(phaseEl.value);
+          updateLabels();
+        });
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      // Mic
+      waves[0].enabled = true;
+      waves[0].amp = 1.5;
+      // Camera
+      waves[1].enabled = true;
+      waves[1].amp = 1.5;
+      // Synthetic
+      waves[2].enabled = false;
+      waves[2].amp = 0.8;
+      waves[2].freq = 2;
+      waves[2].phaseDeg = 0;
+      // WiFi
+      waves[3].enabled = true;
+      waves[3].amp = 1.5;
+
+      wavePanels.forEach((panel, idx) => {
+        panel.querySelector('.enabled').checked = waves[idx].enabled;
+        panel.querySelector('.amp').value = waves[idx].amp;
+        if (idx === 2) {
+          panel.querySelector('.freq').value = waves[idx].freq;
+          panel.querySelector('.phase').value = waves[idx].phaseDeg;
+        }
+      });
+      updateLabels();
+    });
+
+    updateLabels();
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerY = height / 2;
+    const leftPad = 32;
+    const rightPad = 8;
+    const historyLength = 400;
+
+    let micHistory  = new Array(historyLength).fill(0);
+    let camHistory  = new Array(historyLength).fill(0);
+    let wifiHistory = new Array(historyLength).fill(0);
+
+    function drawGrid() {
+      ctx.save();
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = '#202637';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(width, centerY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function computeSynthetic(t) {
+      const w = waves[2];
+      if (!w.enabled || w.amp === 0 || w.freq === 0) return 0;
+      const phaseRad = w.phaseDeg * Math.PI / 180;
+      return w.amp * Math.sin(TWO_PI * w.freq * t + phaseRad);
+    }
+
+    function drawHistoryWave(history, waveIndex, color, lineWidth = 1.5, alpha = 1.0) {
+      if (!waves[waveIndex].enabled) return;
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = lineWidth;
+
+      const usableWidth = width - leftPad - rightPad;
+      const baseScale = height / 3;
+
+      ctx.beginPath();
+      for (let x = 0; x < usableWidth; x++) {
+        const idx = Math.floor((x / usableWidth) * (historyLength - 1));
+        const v = history[idx] * waves[waveIndex].amp;
+        const y = centerY - v * baseScale;
+        const cx = leftPad + x;
+        if (x === 0) ctx.moveTo(cx, y);
+        else ctx.lineTo(cx, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawSyntheticWave() {
+      if (!waves[2].enabled) return;
+
+      ctx.save();
+      ctx.strokeStyle = '#ce93d8';
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = 1.5;
+
+      const usableWidth = width - leftPad - rightPad;
+      const baseScale = height / 3;
+      const timeWindow = 1.0;
+
+      ctx.beginPath();
+      for (let x = 0; x < usableWidth; x++) {
+        const t = (x / usableWidth) * timeWindow;
+        const v = computeSynthetic(t);
+        const y = centerY - v * baseScale;
+        const cx = leftPad + x;
+        if (x === 0) ctx.moveTo(cx, y);
+        else ctx.lineTo(cx, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawMergedWave() {
+      ctx.save();
+      ctx.strokeStyle = '#66bb6a';
+      ctx.lineWidth = 2.0;
+
+      const usableWidth = width - leftPad - rightPad;
+      const baseScale = height / 3;
+      const timeWindow = 1.0;
+      const mode = mergeModeSelect.value;
+
+      ctx.beginPath();
+      for (let x = 0; x < usableWidth; x++) {
+        const idx = Math.floor((x / usableWidth) * (historyLength - 1));
+
+        let v1 = waves[0].enabled ? micHistory[idx]  * waves[0].amp : 0;
+        let v2 = waves[1].enabled ? camHistory[idx]  * waves[1].amp : 0;
+        let v4 = waves[3].enabled ? wifiHistory[idx] * waves[3].amp : 0;
+
+        let v3 = 0;
+        if (waves[2].enabled) {
+          const t = (x / usableWidth) * timeWindow;
+          v3 = computeSynthetic(t);
+        }
+
+        let v;
+        if      (mode === 'sum')   v = v1 + v2 + v3 + v4;
+        else if (mode === 'avg')   v = (v1 + v2 + v3 + v4) / 4;
+        else if (mode === 'diff12') v = v1 - v2;
+        else if (mode === 'diff13') v = v1 - v3;
+        else if (mode === 'diff14') v = v1 - v4;
+        else                        v = v1 + v2 + v3 + v4;
+
+        const y = centerY - v * baseScale;
+        const cx = leftPad + x;
+        if (x === 0) ctx.moveTo(cx, y);
+        else ctx.lineTo(cx, y);
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function render() {
+      drawGrid();
+      drawHistoryWave(micHistory,  0, '#4fc3f7', 1.5, 0.9);
+      drawHistoryWave(camHistory,  1, '#ffb74d', 1.5, 0.9);
+      drawSyntheticWave();
+      drawHistoryWave(wifiHistory, 3, '#81c784', 1.5, 0.9);
+      drawMergedWave();
+      requestAnimationFrame(render);
+    }
+
+    // --- Mic RMS ---
+    async function setupMic() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        const bufferLength = analyser.fftSize;
+        const dataArray = new Uint8Array(bufferLength);
+        source.connect(analyser);
+
+        function updateMic() {
+          analyser.getByteTimeDomainData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            const v = (dataArray[i] - 128) / 128;
+            sum += v * v;
+          }
+          const rms = Math.sqrt(sum / bufferLength);
+          let norm = Math.min(1, rms * 8);
+          micHistory.push(norm);
+          micHistory.shift();
+          requestAnimationFrame(updateMic);
+        }
+        updateMic();
+      } catch (err) {
+        console.error('Mic error:', err);
+        alert('Mic error: ' + err.name);
+      }
+    }
+
+    // --- Camera motion (frame difference) ---
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 240 },
+          audio: false
+        });
+        hiddenVideo.srcObject = stream;
+
+        const tempCanvas = document.createElement('canvas');
+        const tctx = tempCanvas.getContext('2d');
+        let prevFrame = null;
+
+        function updateCam() {
+          const vw = hiddenVideo.videoWidth;
+          const vh = hiddenVideo.videoHeight;
+          if (vw > 0 && vh > 0) {
+            const w = 160;
+            const h = 120;
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+
+            tctx.drawImage(hiddenVideo, 0, 0, w, h);
+            const frame = tctx.getImageData(0, 0, w, h);
+            const data = frame.data;
+
+            if (!prevFrame) {
+              prevFrame = new Uint8ClampedArray(data);
+              camHistory.push(0);
+              camHistory.shift();
+            } else {
+              let sumDiff = 0;
+              const pixels = data.length / 4;
+
+              for (let i = 0; i < data.length; i += 4) {
+                const r1 = data[i],   g1 = data[i+1],   b1 = data[i+2];
+                const r0 = prevFrame[i], g0 = prevFrame[i+1], b0 = prevFrame[i+2];
+
+                const y1 = 0.299*r1 + 0.587*g1 + 0.114*b1;
+                const y0 = 0.299*r0 + 0.587*g0 + 0.114*b0;
+
+                sumDiff += Math.abs(y1 - y0);
+              }
+
+              const avgDiff = sumDiff / pixels;      // 0..255
+              let norm = avgDiff / 40;               // tune gain
+              if (norm > 1) norm = 1;
+
+              camHistory.push(norm);
+              camHistory.shift();
+
+              prevFrame.set(data);
+            }
+          }
+          requestAnimationFrame(updateCam);
+        }
+
+        hiddenVideo.addEventListener('loadedmetadata', () => {
+          hiddenVideo.play();
+          updateCam();
+        });
+      } catch (err) {
+        console.error('Camera error:', err);
+        alert('Camera error: ' + err.name + ' – use http://localhost, not file://');
+      }
+    }
+
+        // --- WiFi RSSI polling from Python server (delta-based wave) ---
+    let lastRssi = null;
+
+    async function pollWifi() {
+      try {
+        const res = await fetch("http://localhost:5000/wifi");  // change to 5050 if your server uses 5050
+        const data = await res.json();
+
+        if (typeof data.rssi === "number") {
+          const rssi = data.rssi;
+          const noise = data.noise;
+          const snr   = data.snr;
+
+          // Show numbers on screen
+          wifiInfo.textContent = `WiFi RSSI: ${rssi} dBm, Noise: ${noise}, SNR: ${snr}`;
+
+          let norm = 0;
+
+          if (lastRssi === null) {
+            // First sample: map absolute RSSI into 0..1
+            norm = (rssi + 100) / 70;   // -100 -> 0, -30 -> 1
+          } else {
+            // Delta between current and last RSSI
+            const delta = rssi - lastRssi;   // typically small: -5..+5
+            let x = delta / 5.0;             // -5..+5 -> -1..+1
+            norm = (x + 1) / 2;              // -1..1 -> 0..1
+          }
+
+          // Clamp to [0,1]
+          if (norm < 0) norm = 0;
+          if (norm > 1) norm = 1;
+
+          wifiHistory.push(norm);
+          wifiHistory.shift();
+
+          lastRssi = rssi;
+        } else {
+          wifiInfo.textContent = "WiFi: no RSSI (not associated?)";
+          wifiHistory.push(0);
+          wifiHistory.shift();
+        }
+      } catch (e) {
+        wifiInfo.textContent = "WiFi: error talking to server";
+        wifiHistory.push(0);
+        wifiHistory.shift();
+      } finally {
+        setTimeout(pollWifi, 300); // ~3 Hz
+      }
+    }
+
+
+    render();
+    setupMic();
+    setupCamera();
+    pollWifi();
+  </script>
+</body>
+</html>

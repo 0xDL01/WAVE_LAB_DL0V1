@@ -1,0 +1,14 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open demonlion_wave_lab_real.html",
+            "file": "/Users/nabharajsawant/wave_lab_dl0v1/demonlion_wave_lab_real.html"
+        }
+    ]
+}
